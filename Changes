@@ -1,6 +1,9 @@
-$Id: Changes,v 1.1 2001/03/24 01:15:01 btrott Exp $
+$Id: Changes,v 1.2 2001/04/01 03:29:18 btrott Exp $
 
 Revision history for Crypt::DSA
+
+0.03
+    - abstracted signature object into Crypt::DSA::Signature object.
 
 0.02  2001.03.23
     - split up code into separate modules (ie. KeyChain, Key, Util, etc.)

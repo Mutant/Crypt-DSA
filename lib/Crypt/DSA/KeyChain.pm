@@ -1,4 +1,4 @@
-# $Id: KeyChain.pm,v 1.5 2001/03/23 23:19:13 btrott Exp $
+# $Id: KeyChain.pm,v 1.6 2001/03/27 02:02:51 btrott Exp $
 
 package Crypt::DSA::KeyChain;
 use strict;
@@ -25,46 +25,41 @@ sub generate_params {
     delete $param{Seed} if $param{Seed} && length $param{Seed} != 20;
     my $v = $param{Verbosity};
 
-    my($counter, $q, $p, $seed) = (0);
+    my($counter, $q, $p, $seed, $seedp1) = (0);
+
+    ## Generate q.
     {
-        my($seedp1);
-        my $test = PARI(1); $test <<= ($bits-1);
+        print STDERR "." if $v;
+        $seed = $param{Seed} ? delete $param{Seed} :
+            join '', map chr rand 255, 1..20;
+        $seedp1 = _seed_plus_one($seed);
+        my $md = sha1($seed) ^ sha1($seedp1);
+        vec($md, 0, 8) |= 0x80;
+        vec($md, 19, 8) |= 0x01;
+        $q = bin2mp($md);
+        redo unless isprime($q);
+    }
 
-        {
-            print STDERR "." if $v;
-            $seed = $param{Seed} ? delete $param{Seed} :
-                join '', map chr rand 255, 1..20;
+    print STDERR "*\n" if $v;
+    my $n = int(("$bits"-1) / 160);
+    my $b = ($bits-1)-PARI($n)*160;
+    my $p_test = PARI(1); $p_test <<= ($bits-1);
 
-            $seedp1 = _seed_plus_one($seed);
-            my $md = sha1($seed) ^ sha1($seedp1);
-
-            vec($md, 0, 8) |= 0x80;
-            vec($md, 19, 8) |= 0x01;
-
-            $q = bin2mp($md);
-            redo unless isprime($q);
+    ## Generate p.
+    {
+        print STDERR "." if $v;
+        my $W = PARI(0);
+        for my $k (0..$n) {
+            $seedp1 = _seed_plus_one($seedp1);
+            my $r0 = bin2mp(sha1($seedp1));
+            $r0 %= PARI(2) ** $b
+                if $k == $n;
+            $W += $r0 << (PARI(160) * $k);
         }
-
-        print STDERR "*\n" if $v;
-        my $n = int(("$bits"-1) / 160);
-        my $b = ($bits-1)-PARI($n)*160;
-
-        {
-            print STDERR "." if $v;
-            my $W = PARI(0);
-            for my $k (0..$n) {
-                $seedp1 = _seed_plus_one($seedp1);
-                my $r0 = bin2mp(sha1($seedp1));
-                $r0 %= PARI(2) ** $b
-                    if $k == $n;
-                $W += $r0 << (PARI(160) * $k);
-            }
-
-            my $X = $W + $test;
-            $p = $X - ($X % (2 * $q) - 1);
-            last if $p >= $test && isprime($p);
-            redo unless ++$counter >= 4096;
-        }
+        my $X = $W + $p_test;
+        $p = $X - ($X % (2 * $q) - 1);
+        last if $p >= $p_test && isprime($p);
+        redo unless ++$counter >= 4096;
     }
 
     print STDERR "*" if $v;
@@ -73,9 +68,7 @@ sub generate_params {
     my $g;
     {
         $g = mod_exp($h, $e, $p);
-        last unless $g == 1;
-        $h++;
-        redo;
+        $h++, redo if $g == 1;
     }
     print STDERR "\n" if $v;
 
@@ -97,7 +90,6 @@ sub generate_keys {
         $priv_key -= $key->q if $priv_key >= $key->q;
         redo if $priv_key == 0;
     }
-
     $pub_key = mod_exp($key->g, $priv_key, $key->p);
     $key->priv_key($priv_key);
     $key->pub_key($pub_key);
