@@ -1,8 +1,20 @@
-$Id: Changes,v 1.2 2001/04/01 03:29:18 btrott Exp $
+$Id: Changes,v 1.8 2001/04/22 23:50:29 btrott Exp $
 
 Revision history for Crypt::DSA
 
-0.03
+0.10
+    - Added much better test suite: tests bigint utilities in Util,
+      sign/verify, key generation (512, 768, 1024 bits), PEM
+      encoding/decoding (if Convert::PEM is installed), FIPS 186-2
+      example case.
+    - Added interface to Convert::PEM to read/write encrypted
+      PEM files containing ASN.1-encoded DSA keys. Convert::PEM
+      is optional; Makefile.PL will check for it and warn if it
+      can't be found.
+    - Get/set accessors now take hex values and store their values
+      internally as strings. Thanks to Crypt::RSA for the idea. :)
+
+0.03  2001.04.07
     - abstracted signature object into Crypt::DSA::Signature object.
 
 0.02  2001.03.23

@@ -5,7 +5,13 @@ README
 ToDo
 lib/Crypt/DSA.pm
 lib/Crypt/DSA/Key.pm
+lib/Crypt/DSA/Key/PEM.pm
 lib/Crypt/DSA/KeyChain.pm
 lib/Crypt/DSA/Signature.pm
 lib/Crypt/DSA/Util.pm
-test.pl
+t/00-compile.t
+t/01-util.t
+t/02-sign.t
+t/03-keygen.t
+t/04-pem.t
+t/05-fips.t
