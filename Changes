@@ -1,0 +1,12 @@
+$Id: Changes,v 1.1 2001/03/24 01:15:01 btrott Exp $
+
+Revision history for Crypt::DSA
+
+0.02  2001.03.23
+    - split up code into separate modules (ie. KeyChain, Key, Util, etc.)
+    - switched from using GMP to Pari
+    - streamlined code
+    - added documentation
+
+0.01  2001.03.22
+    - original version; created by h2xs 1.19

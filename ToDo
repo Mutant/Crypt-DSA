@@ -1,0 +1,5 @@
+$Id: ToDo,v 1.1 2001/03/24 00:21:09 btrott Exp $
+
+Add ability to munge format of keys. For example, read/write keys
+from/to key files (SSH key files, etc.), and also write them in
+other formats.
