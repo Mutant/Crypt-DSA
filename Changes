@@ -1,8 +1,17 @@
-$Id: Changes,v 1.8 2001/04/22 23:50:29 btrott Exp $
+$Id: Changes,v 1.10 2001/05/02 07:23:30 btrott Exp $
 
 Revision history for Crypt::DSA
 
-0.10
+0.11
+    - Added Crypt::DSA::Key::SSH2, which reads SSH2-format DSA
+      key files. These are a different format than those used
+      by OpenSSH (that uses PEM-encoded files). Currently only
+      reading SSH2 key files is supported, and the files must not
+      be encrypted.
+    - Added size method to Crypt::DSA::Key. $key->size is number
+      of bits in p.
+
+0.10  2001.04.22
     - Added much better test suite: tests bigint utilities in Util,
       sign/verify, key generation (512, 768, 1024 bits), PEM
       encoding/decoding (if Convert::PEM is installed), FIPS 186-2

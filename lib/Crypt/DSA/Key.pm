@@ -1,10 +1,11 @@
-# $Id: Key.pm,v 1.9 2001/04/22 08:03:02 btrott Exp $
+# $Id: Key.pm,v 1.11 2001/05/02 06:32:59 btrott Exp $
 
 package Crypt::DSA::Key;
 use strict;
 
 use Math::Pari qw( pari2pv PARI );
 use Carp qw( croak );
+use Crypt::DSA::Util qw( bitsize );
 
 sub new {
     my $class = shift;
@@ -16,6 +17,8 @@ sub new {
     $key;
 }
 
+sub size { bitsize($_[0]->p) }
+
 BEGIN {
     no strict 'refs';
     for my $meth (qw( p q g pub_key priv_key r kinv )) {
@@ -24,7 +27,10 @@ BEGIN {
             if (ref $value eq 'Math::Pari') {
                 $key->{$meth} = pari2pv($value);
             }
-            elsif ($value && !(ref $value)) {
+            elsif (ref $value) {
+                $key->{$meth} = "$value";
+            }
+            elsif ($value) {
                 if ($value =~ /^0x/) {
                     $key->{$meth} = pari2pv(Math::Pari::_hex_cvt($value));
                 }
@@ -188,6 +194,11 @@ argument, and the ASN.1-encoded string will be encrypted using
 the passphrase as a key.
 
 =back
+
+=head2 $key->size
+
+Returns the size of the key, in bits. This is actually the
+number of bits in the large prime I<p>.
 
 =head1 AUTHOR & COPYRIGHTS
 
