@@ -4,7 +4,6 @@ Makefile.PL
 README
 ToDo
 lib/Crypt/DSA.pm
-lib/Crypt/DSA/.BigInt.pm.swp
 lib/Crypt/DSA/Key.pm
 lib/Crypt/DSA/Key/PEM.pm
 lib/Crypt/DSA/Key/SSH2.pm

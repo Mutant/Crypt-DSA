@@ -1,4 +1,4 @@
-# $Id: DSA.pm,v 1.15 2001/05/02 23:25:05 btrott Exp $
+# $Id: DSA.pm,v 1.16 2001/05/04 06:10:03 btrott Exp $
 
 package Crypt::DSA;
 use strict;
@@ -14,7 +14,7 @@ use Crypt::DSA::Signature;
 use Crypt::DSA::Util qw( bitsize bin2mp mod_inverse mod_exp );
 
 use vars qw( $VERSION );
-$VERSION = '0.11';
+$VERSION = '0.12';
 
 sub new {
     my $class = shift;

@@ -1,4 +1,4 @@
-# $Id: Makefile.PL,v 1.5 2001/05/02 07:23:18 btrott Exp $
+# $Id: Makefile.PL,v 1.6 2001/05/04 06:09:34 btrott Exp $
 
 use ExtUtils::MakeMaker;
 
@@ -10,15 +10,17 @@ unless (check_module('Convert::PEM', 0.04, \$missing)) {
 Convert::PEM (version 0.04 or greater) is required if you want
 to read/write PEM-encoded files.
 MSG
+    print "\n";
 }
-print "\n";
 
 unless (check_module('Data::Buffer', 0.01, \$missing)) {
     print<<MSG, "\n";
 Data::Buffer (version 0.01 or greater) if required if you want
 to read/write SSH2 keyfiles.
 MSG
+    print "\n";
 }
+
 print "\n";
 
 if ($missing) {
