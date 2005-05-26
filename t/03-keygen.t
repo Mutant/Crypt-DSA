@@ -1,17 +1,17 @@
-# $Id: 03-keygen.t,v 1.3 2001/05/02 06:32:04 btrott Exp $
+# $Id: 03-keygen.t 1827 2005-05-18 06:00:33Z btrott $
 
 use strict;
 
 use Test;
 use Crypt::DSA;
 use Crypt::DSA::Util qw( mod_exp );
-use Math::Pari;
+use Math::BigInt;
 
 BEGIN { plan tests => 18 }
 
 my $dsa = Crypt::DSA->new;
 
-my $two = PARI(2);
+my $two = Math::BigInt->new(2);
 for my $bits (qw( 512 768 1024 )) {
     my $key = $dsa->keygen( Size => $bits );
     ok($key);

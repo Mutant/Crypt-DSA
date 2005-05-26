@@ -1,12 +1,11 @@
-$Id: README,v 1.2 2001/03/24 00:12:20 btrott Exp $
+$Id: README 1827 2005-05-18 06:00:33Z btrott $
 
 This is Crypt::DSA. It provides DSA signature and key generation.
 
 PREREQUISITES
 
     * Digest::SHA1
-    * Math::Pari (2.001804 or greater)
-    * Crypt::Random (0.33 or greater)
+    * Math::BigInt (1.60 or greater)
 
 INSTALLATION
 

@@ -1,4 +1,4 @@
-# $Id: PEM.pm,v 1.6 2001/04/22 08:03:04 btrott Exp $
+# $Id: PEM.pm 1830 2005-05-25 21:58:57Z btrott $
 
 package Crypt::DSA::Key::PEM;
 use strict;
@@ -6,37 +6,105 @@ use strict;
 use Convert::PEM;
 
 use Crypt::DSA::Key;
+use Carp qw( croak );
 use base qw( Crypt::DSA::Key );
 
 sub deserialize {
     my $key = shift;
     my %param = @_;
+    $param{Content} =~ /DSA PRIVATE KEY/ ?
+        $key->_deserialize_privkey(%param) :
+        $key->_deserialize_pubkey(%param);
+}
+
+sub _deserialize_privkey {
+    my $key = shift;
+    my %param = @_;
 
     my $pem = $key->_pem;
     my $pkey = $pem->decode( Content  => $param{Content},
-                             Password => $param{Password} );
+                             Password => $param{Password},
+                             Macro    => 'DSAPrivateKey' );
     return unless $pkey;
 
     for my $m (qw( p q g pub_key priv_key )) {
-        $key->$m( $pkey->{DSAPrivateKey}{$m} );
+        $key->$m( $pkey->{$m} );
     }
+    $key;
+}
+
+sub _deserialize_pubkey {
+    my $key = shift;
+    my %param = @_;
+
+    my $pem = $key->_pem;
+    my $pkey = $pem->decode( Content  => $param{Content},
+                             Password => $param{Password},
+                             Macro    => 'DSAPublicKey',
+                             Name     => 'PUBLIC KEY' );
+    return unless $pkey;
+
+    my $asn = $pem->asn->find('DSAPubKeyInner');
+    my $num = $asn->decode($pkey->{pub_key}[0]) or croak $asn->{error};
+
+    for my $m (qw( p q g )) {
+        $key->$m( $pkey->{inner}{DSAParams}{$m} );
+    }
+    $key->pub_key($num);
+
     $key;
 }
 
 sub serialize {
     my $key = shift;
+    ## If this is a private key (has the private key portion), serialize
+    ## it as a private key; otherwise use a public key ASN.1 object.
+    $key->priv_key ? $key->_serialize_privkey(@_) : $key->_serialize_pubkey(@_);
+}
+
+sub _serialize_privkey {
+    my $key = shift;
     my %param = @_;
 
-    my $pkey = { DSAPrivateKey => { version => 0 } };
+    my $pkey = { version => 0 };
     for my $m (qw( p q g pub_key priv_key )) {
-        $pkey->{DSAPrivateKey}{$m} = $key->$m();
+        $pkey->{$m} = $key->$m();
     }
 
     my $pem = $key->_pem;
     my $buf = $pem->encode(
             Content  => $pkey,
-            Password => $param{Password}
+            Password => $param{Password},
+            Name     => 'DSA PRIVATE KEY',
+            Macro    => 'DSAPrivateKey',
         ) or croak $pem->errstr;
+    $buf;
+}
+
+sub _serialize_pubkey {
+    my $key = shift;
+    my %param = @_;
+    my $pem = $key->_pem;
+    my $asn = $pem->asn->find('DSAPubKeyInner');
+    ## Force stringification.
+    my $str = $asn->encode($key->pub_key . '') or croak $asn->{error};
+    my $pkey = {
+        inner => {
+            objId => '1.2.840.10040.4.1',
+            DSAParams => {
+                p => $key->p,
+                q => $key->q,
+                g => $key->g
+            },
+        },
+        pub_key => $str
+    };
+    my $buf = $pem->encode(
+            Content  => $pkey,
+            Password => $param{Password},
+            Name     => 'PUBLIC KEY',
+            Macro    => 'DSAPublicKey',
+        ) or return $key->error($pem->errstr);
     $buf;
 }
 
@@ -44,19 +112,31 @@ sub _pem {
     my $key = shift;
     unless (defined $key->{__pem}) {
         my $pem = Convert::PEM->new(
-             Name => "DSA PRIVATE KEY",
-             ASN  => qq(
-                 DSAPrivateKey SEQUENCE {
-                     version INTEGER,
-                     p INTEGER,
-                     q INTEGER,
-                     g INTEGER,
-                     pub_key INTEGER,
-                     priv_key INTEGER
-                 }
-           ));
-        $pem->asn->configure( decode => { bigint => 'Math::Pari' },
-                              encode => { bigint => 'Math::Pari' } );
+            Name => "DSA PRIVATE KEY",
+            ASN  => qq(
+                DSAPrivateKey ::= SEQUENCE {
+                    version INTEGER,
+                    p INTEGER,
+                    q INTEGER,
+                    g INTEGER,
+                    pub_key INTEGER,
+                    priv_key INTEGER
+                }
+
+                DSAPublicKey ::= SEQUENCE {
+                    inner SEQUENCE {
+                        objId OBJECT IDENTIFIER,
+                        DSAParams SEQUENCE {
+                            p INTEGER,
+                            q INTEGER,
+                            g INTEGER
+                        }
+                    }
+                    pub_key BIT STRING
+                }
+
+                DSAPubKeyInner ::= INTEGER
+        ));
         $key->{__pem} = $pem;
     }
     $key->{__pem};

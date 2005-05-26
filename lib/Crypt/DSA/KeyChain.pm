@@ -1,15 +1,14 @@
-# $Id: KeyChain.pm,v 1.6 2001/03/27 02:02:51 btrott Exp $
+# $Id: KeyChain.pm 1828 2005-05-25 16:00:49Z btrott $
 
 package Crypt::DSA::KeyChain;
 use strict;
 
-use Math::Pari qw( PARI isprime );
+use Math::BigInt lib => 'GMP';
 use Digest::SHA1 qw( sha1 );
-use Crypt::Random qw( makerandom );
 use Carp qw( croak );
 
 use Crypt::DSA::Key;
-use Crypt::DSA::Util qw( bin2mp bitsize mod_exp );
+use Crypt::DSA::Util qw( bin2mp bitsize mod_exp makerandom isprime );
 
 sub new {
     my $class = shift;
@@ -20,10 +19,48 @@ sub generate_params {
     my $keygen = shift;
     my %param = @_;
 
-    my $bits = PARI($param{Size});
+    my $bits = Math::BigInt->new($param{Size});
     croak "Number of bits (Size) is too small" unless $bits;
     delete $param{Seed} if $param{Seed} && length $param{Seed} != 20;
     my $v = $param{Verbosity};
+
+    # try to use fast implementations found on the system, if available.
+    unless ($param{Seed} || wantarray || $param{PurePerl}) {
+
+        # OpenSSL support
+        my $openssl = `which openssl`;
+        chomp $openssl;
+        if ($openssl) {
+            print STDERR "Using openssl\n" if $v;
+            my $bits_n = int($bits);
+            my @res = `$openssl dsaparam -text -noout $bits_n 2>/dev/null`;
+
+            my %parts;
+            my $cur_part;
+            foreach (@res) {
+                if (/^\s+(\w):\s*$/) {
+                    $cur_part = $1;
+                    next;
+                }
+                if (/^\s*((?:[0-9a-f]{2,2}:?)+)\s*$/) {
+                    $parts{$cur_part} .= $1;
+                }
+            }
+
+            $parts{$_} =~ s/://g for keys %parts;
+
+            if (scalar keys %parts == 3) {
+                my $key = Crypt::DSA::Key->new;
+                $key->p(Math::BigInt->new("0x" . $parts{p}));
+                $key->q(Math::BigInt->new("0x" . $parts{q}));
+                $key->g(Math::BigInt->new("0x" . $parts{g}));
+                return $key;
+            }
+        }
+
+    }
+
+    # Pure Perl version:
 
     my($counter, $q, $p, $seed, $seedp1) = (0);
 
@@ -31,7 +68,7 @@ sub generate_params {
     {
         print STDERR "." if $v;
         $seed = $param{Seed} ? delete $param{Seed} :
-            join '', map chr rand 255, 1..20;
+            join '', map chr rand 256, 1..20;
         $seedp1 = _seed_plus_one($seed);
         my $md = sha1($seed) ^ sha1($seedp1);
         vec($md, 0, 8) |= 0x80;
@@ -42,19 +79,19 @@ sub generate_params {
 
     print STDERR "*\n" if $v;
     my $n = int(("$bits"-1) / 160);
-    my $b = ($bits-1)-PARI($n)*160;
-    my $p_test = PARI(1); $p_test <<= ($bits-1);
+    my $b = ($bits-1)-Math::BigInt->new($n)*160;
+    my $p_test = Math::BigInt->new(1); $p_test <<= ($bits-1);
 
     ## Generate p.
     {
         print STDERR "." if $v;
-        my $W = PARI(0);
+        my $W = Math::BigInt->new(0);
         for my $k (0..$n) {
             $seedp1 = _seed_plus_one($seedp1);
             my $r0 = bin2mp(sha1($seedp1));
-            $r0 %= PARI(2) ** $b
+            $r0 %= Math::BigInt->new(2) ** $b
                 if $k == $n;
-            $W += $r0 << (PARI(160) * $k);
+            $W += $r0 << (Math::BigInt->new(160) * $k);
         }
         my $X = $W + $p_test;
         $p = $X - ($X % (2 * $q) - 1);
@@ -64,7 +101,7 @@ sub generate_params {
 
     print STDERR "*" if $v;
     my $e = ($p - 1) / $q;
-    my $h = PARI(2);
+    my $h = Math::BigInt->new(2);
     my $g;
     {
         $g = mod_exp($h, $e, $p);
@@ -86,7 +123,7 @@ sub generate_keys {
     my($priv_key, $pub_key);
     {
         my $i = bitsize($key->q);
-        $priv_key = makerandom(Size => $i, Strength => 0);
+        $priv_key = makerandom(Size => $i);
         $priv_key -= $key->q if $priv_key >= $key->q;
         redo if $priv_key == 0;
     }

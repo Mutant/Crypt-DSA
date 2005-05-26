@@ -1,20 +1,18 @@
-# $Id: DSA.pm,v 1.16 2001/05/04 06:10:03 btrott Exp $
+# $Id: DSA.pm 1842 2005-05-26 16:09:21Z btrott $
 
 package Crypt::DSA;
 use strict;
 
-use Math::Pari qw( PARI );
-use Crypt::Random qw( makerandom );
 use Digest::SHA1 qw( sha1 );
 use Carp qw( croak );
 
 use Crypt::DSA::KeyChain;
 use Crypt::DSA::Key;
 use Crypt::DSA::Signature;
-use Crypt::DSA::Util qw( bitsize bin2mp mod_inverse mod_exp );
+use Crypt::DSA::Util qw( bitsize bin2mp mod_inverse mod_exp makerandom );
 
 use vars qw( $VERSION );
-$VERSION = '0.12';
+$VERSION = '0.13';
 
 sub new {
     my $class = shift;
@@ -66,7 +64,7 @@ sub _sign_setup {
     my $key = shift;
     my($k, $r);
     {
-        $k = makerandom(Size => bitsize($key->q), Strength => 0);
+        $k = makerandom(Size => bitsize($key->q));
         $k -= $key->q if $k >= $key->q;
         redo if $k == 0;
     }
@@ -193,8 +191,8 @@ The default is 0.
 Signs a message (or the digest of a message) using the private
 portion of the DSA key and returns the signature.
 
-The signature is a hash reference with two keys: I<s> and
-I<r>.
+The return value--the signature--is a I<Crypt::DSA::Signature>
+object.
 
 I<%arg> can include:
 
@@ -248,7 +246,7 @@ This argument is required.
 =item * Signature
 
 The signature itself. Should be in the same format as returned
-from I<sign>, a hash reference with two keys, I<s> and I<r>.
+from I<sign>, a I<Crypt::DSA::Signature> object.
 
 This argument is required.
 

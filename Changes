@@ -1,6 +1,19 @@
-$Id: Changes,v 1.11 2001/05/04 06:08:41 btrott Exp $
+$Id: Changes 1842 2005-05-26 16:09:21Z btrott $
 
 Revision history for Crypt::DSA
+
+0.13  2005.05.26
+    - Rewrote to use Math::BigInt instead of Math::Pari, including patches
+      from Brad Fitzpatrick for a replacement for the isprime function
+      (both using pure Perl and an external gp program).
+    - Added optional Content argument to Crypt::DSA::Key->new, to specify
+      serialized Content to be deserialized.
+    - Added Signature serialization and deserialization of ASN.1-encoded
+      structures.
+    - Added ability to do key generation using an external openssl binary.
+      Thanks to Brad Fitzpatrick for the patch.
+    - Signature object now has better get/set acccessors.
+    - Use Module::Install instead of hand-coded Makefile.PL.
 
 0.12  2001.05.03
     - Removed swap file from the distribution. :)

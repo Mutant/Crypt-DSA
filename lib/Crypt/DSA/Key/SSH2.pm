@@ -1,4 +1,4 @@
-# $Id: SSH2.pm,v 1.1 2001/05/02 07:15:05 btrott Exp $
+# $Id: SSH2.pm 211 2001-05-02 07:15:05Z btrott $
 
 package Crypt::DSA::Key::SSH2;
 use strict;

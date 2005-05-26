@@ -1,4 +1,4 @@
-# $Id: 05-fips.t,v 1.1 2001/04/21 08:40:01 btrott Exp $
+# $Id: 06-fips.t 1834 2005-05-25 22:43:06Z btrott $
 
 use strict;
 

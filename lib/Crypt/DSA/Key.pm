@@ -1,9 +1,9 @@
-# $Id: Key.pm,v 1.11 2001/05/02 06:32:59 btrott Exp $
+# $Id: Key.pm 1830 2005-05-25 21:58:57Z btrott $
 
 package Crypt::DSA::Key;
 use strict;
 
-use Math::Pari qw( pari2pv PARI );
+use Math::BigInt lib => 'GMP';
 use Carp qw( croak );
 use Crypt::DSA::Util qw( bitsize );
 
@@ -11,7 +11,11 @@ sub new {
     my $class = shift;
     my %param = @_;
     my $key = bless { }, $class;
-    if ($param{Filename}) {
+
+    if ($param{Filename} || $param{Content}) {
+        if ($param{Filename} && $param{Content}) {
+            croak "Filename and Content are mutually exclusive.";
+        }
         return $key->read(%param);
     }
     $key;
@@ -25,21 +29,23 @@ BEGIN {
         *$meth = sub {
             my($key, $value) = @_;
             if (ref $value eq 'Math::Pari') {
-                $key->{$meth} = pari2pv($value);
+                $key->{$meth} = Math::Pari::pari2pv($value);
             }
             elsif (ref $value) {
                 $key->{$meth} = "$value";
             }
             elsif ($value) {
                 if ($value =~ /^0x/) {
-                    $key->{$meth} = pari2pv(Math::Pari::_hex_cvt($value));
+                    $key->{$meth} = Math::BigInt->new($value)->bstr;
                 }
                 else {
                     $key->{$meth} = $value;
                 }
+            } elsif (@_ > 1 && !defined $value) {
+                delete $key->{$meth};
             }
             my $ret = $key->{$meth} || "";
-            $ret = PARI("$ret") if $ret =~ /^\d+$/;
+            $ret = Math::BigInt->new("$ret") if $ret =~ /^\d+$/;
             $ret;
         };
     }
@@ -54,11 +60,12 @@ sub read {
     croak "Invalid key file type '$type': $@" if $@;
     bless $key, $class;
     local *FH;
-    my $fname = delete $param{Filename};
-    open FH, $fname or return;
-    my $blob = do { local $/; <FH> };
-    close FH;
-    $param{Content} = $blob;
+    if (my $fname = delete $param{Filename}) {
+        open FH, $fname or return;
+        my $blob = do { local $/; <FH> };
+        close FH;
+        $param{Content} = $blob;
+    }
     $key->deserialize(%param);
 }
 
@@ -143,17 +150,21 @@ encrypted, ASN.1-encoded object). Support for reading/writing
 PEM files comes from I<Convert::PEM>; if you don't have this
 module installed, the I<new> method will die.
 
-This argument is mandatory, I<if> you're reading the file from
-disk (ie. you provide a I<Filename> argument).
+This argument is mandatory, I<if> you're either reading the file from
+disk (ie. you provide a I<Filename> argument) or you've specified the
+I<Content> argument.
 
 =item * Filename
 
 The location of the file from which you'd like to read the key.
+Requires a I<Type> argument so the decoder knows what type of file it
+is.  You can't specify I<Content> and I<Filename> at the same time.
 
-If you're reading a key in from disk, this argument is
-(obviously) mandatory. In fact, the presence of this argument
-is how I<new> determines whether or not to read a key from
-disk.
+=item * Content
+
+The serialized version of the key.  Requires a I<Type> argument so the
+decoder knows how to decode it.  You can't specify I<Content> and
+I<Filename> at the same time.
 
 =item * Password
 
@@ -168,6 +179,12 @@ If your passphrase is incorrect, I<new> will return C<undef>.
 
 Writes a key (optionally) to disk, using a format that you
 define with the I<Type> parameter.
+
+If your I<$key> object has a defined I<priv_key> (private key portion),
+the key will be written as a DSA private key object; otherwise, it will
+be written out as a public key. Note that not all serialization mechanisms
+can produce public keys in this version--currently, only PEM public keys
+are supported.
 
 I<%arg> can include:
 
