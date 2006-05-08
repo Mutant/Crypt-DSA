@@ -1,17 +1,17 @@
-name: Crypt-DSA
-version: 0.13
-abstract: DSA signatures and key generation
-author: Benjamin Trott <cpan@stupidfool.org>
-license: perl
+abstract: DSA Signatures and Key Generation
+author: 'Benjamin Trott, ben@sixapart.com'
 distribution_type: module
-requires:
-  Math::BigInt: 1.60
-  Digest::SHA1: 0
+generated_by: Module::Install version 0.61
+license: perl
+name: Crypt-DSA
+no_index:
+  directory:
+    - inc
+    - t
 recommends:
   Convert::PEM: 0.07
   Data::Buffer: 0.01
-no_index:
-  directory:
-    - t
-    - inc
-generated_by: Module::Install version 0.36
+requires:
+  Digest::SHA1: 0
+  Math::BigInt: 1.60
+version: 0.14

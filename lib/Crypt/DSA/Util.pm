@@ -1,10 +1,11 @@
-# $Id: Util.pm 1828 2005-05-25 16:00:49Z btrott $
+# $Id: Util.pm 1938 2006-05-03 06:20:36Z btrott $
 
 package Crypt::DSA::Util;
 use strict;
 
 use Math::BigInt lib => 'GMP';
 use Fcntl;
+use Carp qw( croak );
 
 use vars qw( @EXPORT_OK @ISA );
 use Exporter;
@@ -50,17 +51,24 @@ sub makerandom {
     my %param = @_;
     my $size = $param{Size};
     my $bytes = int($size / 8) + 1;
-    sysopen my $fh, '/dev/random', O_RDONLY
-        or return;
-    my($r, $read) = ('', 0);
-    while ($read < $bytes) {
-        my $got = sysread $fh, my($chunk), $bytes - $read;
-        next unless $got;
-        die "Error: $!" if $got == -1;
-        $r .= $chunk;
-        $read = length $r;
+    my $r = '';
+    if ( sysopen my $fh, '/dev/random', O_RDONLY ) {
+        my $read = 0;
+        while ($read < $bytes) {
+            my $got = sysread $fh, my($chunk), $bytes - $read;
+            next unless $got;
+            die "Error: $!" if $got == -1;
+            $r .= $chunk;
+            $read = length $r;
+        }
+        close $fh;
     }
-    close $fh;
+    elsif ( require Data::Random ) {
+        $r .= Data::Random::rand_chars( set=>'numeric' ) for 1..$bytes;
+    }
+    else {
+        croak "makerandom requires /dev/random or Data::Random";
+    }
     my $down = $size - 1;
     $r = unpack 'H*', pack 'B*', '0' x ( $size % 8 ? 8 - $size % 8 : 0 ) .
         '1' . unpack "b$down", $r;

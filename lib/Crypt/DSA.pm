@@ -1,4 +1,4 @@
-# $Id: DSA.pm 1842 2005-05-26 16:09:21Z btrott $
+# $Id: DSA.pm 1938 2006-05-03 06:20:36Z btrott $
 
 package Crypt::DSA;
 use strict;
@@ -12,7 +12,7 @@ use Crypt::DSA::Signature;
 use Crypt::DSA::Util qw( bitsize bin2mp mod_inverse mod_exp makerandom );
 
 use vars qw( $VERSION );
-$VERSION = '0.13';
+$VERSION = '0.14';
 
 sub new {
     my $class = shift;
@@ -265,13 +265,15 @@ be created and used in the verification process.
 
 =back
 
-=head1 AUTHOR & COPYRIGHT
+=head1 AUTHOR
 
-Benjamin Trott, ben@rhumba.pair.com
+Benjamin Trott, ben@sixapart.com
 
-Except where otherwise noted, Crypt::DSA is Copyright 2001
+=head1 COPYRIGHT
+
+Except where otherwise noted, Crypt::DSA is Copyright 2006
 Benjamin Trott. All rights reserved. Crypt::DSA is free
-software; you may redistribute it and/or modify it under
-the same terms as Perl itself.
+software; you may redistribute it and/or modify it
+under the same terms as Perl itself.
 
 =cut

@@ -1,4 +1,4 @@
-# $Id: KeyChain.pm 1828 2005-05-25 16:00:49Z btrott $
+# $Id: KeyChain.pm 1938 2006-05-03 06:20:36Z btrott $
 
 package Crypt::DSA::KeyChain;
 use strict;
@@ -6,6 +6,9 @@ use strict;
 use Math::BigInt lib => 'GMP';
 use Digest::SHA1 qw( sha1 );
 use Carp qw( croak );
+use IPC::Open3;
+use File::Spec;
+use Symbol qw( gensym );
 
 use Crypt::DSA::Key;
 use Crypt::DSA::Util qw( bin2mp bitsize mod_exp makerandom isprime );
@@ -28,12 +31,19 @@ sub generate_params {
     unless ($param{Seed} || wantarray || $param{PurePerl}) {
 
         # OpenSSL support
-        my $openssl = `which openssl`;
+        my $bin = $^O eq 'MSWin32' ? 'openssl.exe' : 'openssl';
+        my $openssl = `which $bin`;
         chomp $openssl;
         if ($openssl) {
             print STDERR "Using openssl\n" if $v;
             my $bits_n = int($bits);
-            my @res = `$openssl dsaparam -text -noout $bits_n 2>/dev/null`;
+            open( NULL, ">", File::Spec->devnull );
+            my $pid = open3( gensym, \*OPENSSL, ">&NULL", "$openssl dsaparam -text -noout $bits_n" );
+            my @res;
+            while( <OPENSSL> ) {
+                push @res, $_;
+            }
+            waitpid( $pid, 0 );
 
             my %parts;
             my $cur_part;

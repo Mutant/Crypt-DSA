@@ -1,19 +1,12 @@
-# $Id: Makefile.PL 1830 2005-05-25 21:58:57Z btrott $
+# $Id: Makefile.PL 1938 2006-05-03 06:20:36Z btrott $
 
 use inc::Module::Install;
 
-name('Crypt-DSA');
-abstract('DSA signatures and key generation');
-author('Benjamin Trott <cpan@stupidfool.org>');
-version_from('lib/Crypt/DSA.pm');
-license('perl');
-no_index(directory => 't');
-sign(1);
-
-include('ExtUtils::AutoInstall');
-
-requires('Math::BigInt' => '1.60');
-requires('Digest::SHA1');
+name     'Crypt-DSA';
+all_from 'lib/Crypt/DSA.pm';
+requires 'Digest::SHA1' => 0;
+requires 'Math::BigInt' => '1.60';
+requires 'Data::Random' => '0.05' if $^O eq 'MSWin32';
 
 features(
     'Read/write PEM-encoded files' => [
@@ -27,7 +20,6 @@ features(
     ],
 );
 
-auto_include();
-auto_install();
-
-&WriteAll;
+sign(1);
+auto_install;
+WriteAll;
