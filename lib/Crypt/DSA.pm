@@ -1,18 +1,18 @@
-# $Id: DSA.pm 1938 2006-05-03 06:20:36Z btrott $
-
 package Crypt::DSA;
-use strict;
 
+use 5.005;
+use strict;
 use Digest::SHA1 qw( sha1 );
 use Carp qw( croak );
-
 use Crypt::DSA::KeyChain;
 use Crypt::DSA::Key;
 use Crypt::DSA::Signature;
 use Crypt::DSA::Util qw( bitsize bin2mp mod_inverse mod_exp makerandom );
 
 use vars qw( $VERSION );
-$VERSION = '0.14';
+BEGIN {
+    $VERSION = '1.16';
+}
 
 sub new {
     my $class = shift;
@@ -99,7 +99,10 @@ sub verify {
 }
 
 1;
+
 __END__
+
+=pod
 
 =head1 NAME
 
@@ -265,15 +268,30 @@ be created and used in the verification process.
 
 =back
 
+=head1 TODO
+
+Add ability to munge format of keys. For example, read/write keys
+from/to key files (SSH key files, etc.), and also write them in
+other formats.
+
+=head1 SUPPORT
+
+Bugs should be reported via the CPAN bug tracker at
+
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Crypt-DSA>
+
+For other issues, contact the author.
+
 =head1 AUTHOR
 
-Benjamin Trott, ben@sixapart.com
+Benjamin Trott E<lt>ben@sixapart.comE<gt>
 
 =head1 COPYRIGHT
 
-Except where otherwise noted, Crypt::DSA is Copyright 2006
-Benjamin Trott. All rights reserved. Crypt::DSA is free
-software; you may redistribute it and/or modify it
-under the same terms as Perl itself.
+Except where otherwise noted,
+Crypt::DSA is Copyright 2006 - 2009 Benjamin Trott.
+
+Crypt::DSA is free software; you may redistribute it
+and/or modify it under the same terms as Perl itself.
 
 =cut

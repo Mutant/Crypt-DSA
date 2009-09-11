@@ -1,14 +1,17 @@
-# $Id: 07-openid.t 1843 2005-05-26 16:15:07Z btrott $
+#!/usr/bin/perl
 
 use strict;
-
+BEGIN {
+	$|  = 1;
+	$^W = 1;
+}
 use Test::More;
 BEGIN {
-    eval { require Convert::PEM };
-    if ($@) {
-        Test::More->import( skip_all => 'no Convert::PEM' );
-    }
-    Test::More->import( tests => 11 );
+	eval { require Convert::PEM };
+	if ( $@ ) {
+		Test::More->import( skip_all => 'no Convert::PEM' );
+	}
+	Test::More->import( tests => 11 );
 }
 
 use Crypt::DSA;

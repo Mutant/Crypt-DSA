@@ -1,14 +1,12 @@
 Changes
-inc/Module/AutoInstall.pm
 inc/Module/Install.pm
-inc/Module/Install/AutoInstall.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
 inc/Module/Install/Fetch.pm
-inc/Module/Install/Include.pm
 inc/Module/Install/Makefile.pm
 inc/Module/Install/Metadata.pm
 inc/Module/Install/Win32.pm
+inc/Module/Install/With.pm
 inc/Module/Install/WriteAll.pm
 lib/Crypt/DSA.pm
 lib/Crypt/DSA/Key.pm
@@ -17,6 +15,7 @@ lib/Crypt/DSA/Key/SSH2.pm
 lib/Crypt/DSA/KeyChain.pm
 lib/Crypt/DSA/Signature.pm
 lib/Crypt/DSA/Util.pm
+LICENSE
 Makefile.PL
 MANIFEST			This list of files
 META.yml
@@ -28,4 +27,6 @@ t/03-keygen.t
 t/04-pem.t
 t/06-fips.t
 t/07-openid.t
-ToDo
+t/97_meta.t
+t/98_pod.t
+t/99_pmv.t

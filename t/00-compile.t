@@ -1,8 +1,12 @@
-# $Id: 00-compile.t 192 2001-04-21 08:40:01Z btrott $
+#!/usr/bin/perl
 
-my $loaded;
-BEGIN { print "1..1\n" }
-use Crypt::DSA;
-$loaded++;
-print "ok 1\n";
-END { print "not ok 1\n" unless $loaded }
+use strict;
+BEGIN {
+	$|  = 1;
+	$^W = 1;
+}
+use Test::More tests => 1;
+
+use_ok( 'Crypt::DSA' );
+
+diag( "Testing Crypt::DSA $Crypt::DSA::VERSION" );
